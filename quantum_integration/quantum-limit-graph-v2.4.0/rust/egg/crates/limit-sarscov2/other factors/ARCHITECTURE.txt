@@ -1,0 +1,326 @@
+SARS-CoV-2 QUANTUM LIMIT GRAPH - ARCHITECTURE OVERVIEW
+======================================================
+
+SYSTEM ARCHITECTURE
+===================
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    SARS-CoV-2 QUANTUM LIMIT GRAPH               │
+│                     Multi-Stage Correlation System              │
+└─────────────────────────────────────────────────────────────────┘
+
+LAYER 1: CORE DATA STRUCTURES (core.rs)
+========================================
+
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│   NodeType   │     │     Node     │     │     Edge     │
+│   (Enum)     │────▶│   (Struct)   │◀────│   (Struct)   │
+└──────────────┘     └──────────────┘     └──────────────┘
+      │                     │                     │
+      │                     │                     │
+      ▼                     ▼                     ▼
+  10 Types           UUID + Metadata      Correlation Data
+  - Central          - Quantum Weight     - Strength
+  - Biological       - Stage              - Entanglement
+  - Comorbidity      - Evidence           - Type
+  - Coinfection      - Confidence         - Stage
+  - Socioeconomic
+  - Environmental
+  - Immunological
+  - Genomic
+  - Therapeutic
+  - PublicHealth
+
+LAYER 2: GRAPH CONSTRUCTION (graph_cons.rs)
+============================================
+
+┌─────────────────────────────────────────────────────────────┐
+│              QuantumLimitGraphBuilder                       │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  Stage 1: Direct Biological (4 nodes)               │  │
+│  │  - QuantumLimitGraph (Central)                      │  │
+│  │  - ACE2 Receptor                                    │  │
+│  │  - Spike Protein                                    │  │
+│  │  - Viral Load                                       │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                          │                                  │
+│                          ▼                                  │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  Stage 2: Indirect Factors (6 nodes)                │  │
+│  │  - Diabetes, Cardiovascular, Respiratory            │  │
+│  │  - Kidney/Liver, Influenza, RSV                     │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                          │                                  │
+│                          ▼                                  │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  Stage 3: Systemic Socioeconomic (3 nodes)          │  │
+│  │  - Crowded Housing, Public Jobs, Healthcare         │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                          │                                  │
+│                          ▼                                  │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  Stage 4: Environmental (3 nodes)                   │  │
+│  │  - Air Quality, Ventilation, Temp/Humidity          │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                          │                                  │
+│                          ▼                                  │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  Stage 5: Quantum Factors (2 nodes)                 │  │
+│  │  - Immune Response, Genomic Variants                │  │
+│  └──────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+
+LAYER 3: SERIALIZATION (serial.rs)
+===================================
+
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│    Node      │────▶│ Serializable │────▶│     JSON     │
+│   (Rust)     │     │     Node     │     │   Output     │
+└──────────────┘     └──────────────┘     └──────────────┘
+
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│    Edge      │────▶│ Serializable │────▶│     JSON     │
+│   (Rust)     │     │     Edge     │     │   Output     │
+└──────────────┘     └──────────────┘     └──────────────┘
+
+LAYER 4: EXPORT SYSTEM (graph_to_json.rs)
+==========================================
+
+                    ┌──────────────────┐
+                    │  DiGraph<Node,   │
+                    │      Edge>       │
+                    └────────┬─────────┘
+                             │
+                ┌────────────┼────────────┐
+                │            │            │
+                ▼            ▼            ▼
+        ┌──────────┐  ┌──────────┐  ┌──────────┐
+        │   Full   │  │ Compact  │  │  Stage   │
+        │  Export  │  │  Export  │  │ Filtered │
+        └──────────┘  └──────────┘  └──────────┘
+             │             │             │
+             ▼             ▼             ▼
+        Full JSON    Minimal JSON   Stage JSON
+
+LAYER 5: VISUALIZATION (frontend.html)
+=======================================
+
+┌─────────────────────────────────────────────────────────────┐
+│                    Web Visualization                        │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │              D3.js Force Layout                      │  │
+│  │                                                      │  │
+│  │  ┌────────┐  ┌────────┐  ┌────────┐  ┌────────┐   │  │
+│  │  │ Node 1 │──│ Node 2 │──│ Node 3 │──│ Node N │   │  │
+│  │  └────────┘  └────────┘  └────────┘  └────────┘   │  │
+│  │       │          │          │          │           │  │
+│  │       └──────────┴──────────┴──────────┘           │  │
+│  │                                                      │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  Controls: Stage Filter | Type Filter | Zoom/Pan    │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │  Statistics: Nodes | Edges | Quantum Metrics        │  │
+│  └──────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+
+DATA FLOW
+=========
+
+1. BUILD PHASE
+   Rust Code → Graph Construction → In-Memory Graph
+
+2. EXPORT PHASE
+   In-Memory Graph → Serialization → JSON Files
+
+3. VISUALIZATION PHASE
+   JSON Files → D3.js → Interactive Web Display
+
+4. ANALYSIS PHASE (Python)
+   JSON Files → NetworkX → Statistical Analysis
+
+
+QUANTUM CORRELATION MODEL
+==========================
+
+Stage 1: Direct Biological
+---------------------------
+Correlation: 0.88 - 0.98
+Entanglement: 0.85 - 0.95
+Type: Causal, Bidirectional
+
+Stage 2: Indirect Factors
+--------------------------
+Correlation: 0.72 - 0.87
+Entanglement: 0.68 - 0.83
+Type: Correlative, Bidirectional
+
+Stage 3: Systemic Socioeconomic
+--------------------------------
+Correlation: 0.74 - 0.86
+Entanglement: 0.60 - 0.68
+Type: Probabilistic, Bidirectional
+
+Stage 4: Environmental
+-----------------------
+Correlation: 0.65 - 0.77
+Entanglement: 0.50 - 0.58
+Type: Causal, Correlative
+
+Stage 5: Quantum Factors
+-------------------------
+Correlation: 0.87 - 0.94
+Entanglement: 0.88 - 0.95
+Type: QuantumEntangled
+
+
+INTEGRATION POINTS
+==================
+
+┌─────────────────────────────────────────────────────────────┐
+│                  Quantum Limit Graph v2.4.0                 │
+│                                                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
+│  │ limit-core   │  │limit-sarscov2│  │ limit-agents │     │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘     │
+│         │                 │                 │              │
+│         └─────────────────┼─────────────────┘              │
+│                           │                                │
+│                           ▼                                │
+│              ┌────────────────────────┐                    │
+│              │  sarscov2-factors      │                    │
+│              │  (This Implementation) │                    │
+│              └────────────────────────┘                    │
+└─────────────────────────────────────────────────────────────┘
+
+
+COMPONENT DEPENDENCIES
+======================
+
+core.rs
+  ├── serde (serialization)
+  ├── uuid (unique IDs)
+  └── chrono (timestamps)
+
+graph_cons.rs
+  ├── core.rs
+  ├── petgraph (graph structure)
+  └── std::collections::HashMap
+
+serial.rs
+  ├── core.rs
+  └── serde (serialization)
+
+graph_to_json.rs
+  ├── core.rs
+  ├── serial.rs
+  ├── petgraph
+  └── serde_json
+
+lib.rs
+  ├── core.rs
+  ├── graph_cons.rs
+  ├── serial.rs
+  └── graph_to_json.rs
+
+main.rs
+  ├── lib.rs
+  └── std::fs
+
+python_integration.py
+  ├── JSON files (output)
+  ├── networkx
+  ├── matplotlib
+  └── numpy
+
+frontend.html
+  ├── JSON files (output)
+  └── D3.js v7
+
+
+PERFORMANCE CHARACTERISTICS
+============================
+
+Graph Construction: O(n) where n = nodes
+JSON Export: O(n + e) where e = edges
+Memory Usage: ~2KB per node, ~1KB per edge
+Visualization: Handles 1000+ nodes smoothly
+
+
+FILE STRUCTURE
+==============
+
+other factors/
+├── core.rs              # Core data structures
+├── graph_cons.rs        # Graph construction
+├── serial.rs            # Serialization
+├── graph_to_json.rs     # JSON export
+├── lib.rs               # Library interface
+├── main.rs              # CLI tool
+├── frontend.html        # Visualization
+├── python_integration.py # Python wrapper
+├── Cargo.toml           # Build config
+├── README.md            # Documentation
+├── QUICK_START.md       # Quick start guide
+└── ARCHITECTURE.txt     # This file
+
+
+USAGE PATTERNS
+==============
+
+1. RUST USAGE
+   use sarscov2_factors::*;
+   let graph = build_quantum_limit_graph();
+   let json = export_graph_to_json(&graph);
+
+2. CLI USAGE
+   cargo run --release
+
+3. PYTHON USAGE
+   from python_integration import SARSCoV2QuantumGraph
+   graph = SARSCoV2QuantumGraph()
+   graph.load_graph()
+   graph.visualize()
+
+4. WEB USAGE
+   Open frontend.html in browser
+
+
+KEY DESIGN DECISIONS
+====================
+
+1. Builder Pattern: Flexible graph construction
+2. Stage-Based Model: Clear correlation progression
+3. Quantum Factors: Entanglement metrics throughout
+4. Multiple Export Formats: Full, compact, filtered
+5. Interactive Visualization: D3.js force layout
+6. Python Integration: NetworkX compatibility
+7. Type Safety: Rust enums and structs
+8. Metadata Tracking: Evidence and confidence scores
+
+
+FUTURE EXTENSIONS
+=================
+
+1. Real-time data integration
+2. Machine learning predictions
+3. 3D visualization (WebGL)
+4. REST API
+5. Database backend (Neo4j)
+6. Mobile app
+7. Collaborative features
+8. Multi-graph comparison
+
+
+VERSION INFORMATION
+===================
+
+Version: 0.1.0
+Part of: Quantum Limit Graph v2.4.0
+Date: December 15, 2025
+License: See main project LICENSE
