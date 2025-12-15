@@ -1,0 +1,20 @@
+[package]
+name = "limit-hub"
+version = "2.4.1"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4"] }
+axum = "0.7"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+anyhow = "1"
+
+# Internal dependencies
+limit-benchmark = { path = "../limit-benchmark" }
+limit-quantum = { path = "../limit-quantum" }
+limit-bio-sars = { path = "../limit-bio-sars" }
+limit-reflection = { path = "../limit-reflection" }
