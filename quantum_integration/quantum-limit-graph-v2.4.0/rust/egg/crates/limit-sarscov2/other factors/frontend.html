@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum LIMIT Graph: SARS-CoV-2 Enhanced Visualization</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 100%);
+      color: #eee;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+    }
+    
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    
+    header {
+      background: rgba(26, 26, 46, 0.9);
+      padding: 20px;
+      border-bottom: 2px solid #4a90e2;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    
+    h1 {
+      font-size: 28px;
+      color: #4a90e2;
+      margin-bottom: 10px;
+    }
+    
+    .subtitle {
+      font-size: 14px;
+      color: #aaa;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    label {
+      font-size: 13px;
+      color: #ccc;
+    }
+    
+    select, button {
+      padding: 8px 15px;
+      background: #2a2a3e;
+      border: 1px solid #4a90e2;
+      color: #eee;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.3s;
+    }
+    
+    select:hover, button:hover {
+      background: #3a3a4e;
+      border-color: #5aa0f2;
+    }
+    
+    .main-content {
+      flex: 1;
+      display: flex;
+      position: relative;
+    }
+    
+    #graph-container {
+      flex: 1;
+      position: relative;
+    }
+    
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .node circle {
+      stroke: #fff;
+      stroke-width: 2px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .node:hover circle {
+      stroke-width: 4px;
+      filter: brightness(1.3);
+    }
+    
+    .node text {
+      fill: #eee;
+      font-size: 11px;
+      font-weight: 500;
+      pointer-events: none;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+    }
+    
+    .link {
+      stroke-opacity: 0.6;
+      transition: all 0.3s;
+    }
+    
+    .link:hover {
+      stroke-opacity: 1;
+      stroke-width: 4px !important;
+    }
+    
+    .legend {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(26, 26, 46, 0.95);
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #4a90e2;
+      max-width: 300px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    
+    .legend h3 {
+      font-size: 16px;
+      margin-bottom: 15px;
+      color: #4a90e2;
+      border-bottom: 1px solid #4a90e2;
+      padding-bottom: 8px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+      font-size: 12px;
+    }
+    
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-right: 10px;
+      border: 2px solid #fff;
+    }
+    
+    .tooltip {
+      position: absolute;
+      background: rgba(26, 26, 46, 0.98);
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #4a90e2;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+      max-width: 350px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+      z-index: 1000;
+    }
+    
+    .tooltip.visible {
+      opacity: 1;
+    }
+    
+    .tooltip h4 {
+      color: #4a90e2;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    
+    .tooltip p {
+      margin: 5px 0;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    
+    .tooltip .metric {
+      display: flex;
+      justify-content: space-between;
+      margin: 5px 0;
+      padding: 5px;
+      background: rgba(74, 144, 226, 0.1);
+      border-radius: 3px;
+    }
+    
+    .tooltip .metric-label {
+      color: #aaa;
+    }
+    
+    .tooltip .metric-value {
+      color: #4a90e2;
+      font-weight: bold;
+    }
+    
+    .stats {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(26, 26, 46, 0.95);
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid #4a90e2;
+      font-size: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    
+    .stats h3 {
+      color: #4a90e2;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    
+    .stat-item {
+      margin: 5px 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    
+    .stat-label {
+      color: #aaa;
+    }
+    
+    .stat-value {
+      color: #4a90e2;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🧬 Quantum LIMIT Graph: SARS-CoV-2 Knowledge Network</h1>
+      <p class="subtitle">Enhanced Multi-Stage Correlation Visualization with Quantum Entanglement Factors</p>
+      
+      <div class="controls">
+        <div class="control-group">
+          <label for="stage-filter">Filter by Stage:</label>
+          <select id="stage-filter">
+            <option value="all">All Stages</option>
+            <option value="Stage1Direct">Stage 1: Direct Biological</option>
+            <option value="Stage2Indirect">Stage 2: Indirect Factors</option>
+            <option value="Stage3Systemic">Stage 3: Systemic Socioeconomic</option>
+            <option value="Stage4Environmental">Stage 4: Environmental</option>
+            <option value="Stage5Quantum">Stage 5: Quantum Factors</option>
+          </select>
+        </div>
+        
+        <div class="control-group">
+          <label for="node-type-filter">Filter by Type:</label>
+          <select id="node-type-filter">
+            <option value="all">All Types</option>
+            <option value="Central">Central</option>
+            <option value="Biological">Biological</option>
+            <option value="Comorbidity">Comorbidity</option>
+            <option value="Coinfection">Coinfection</option>
+            <option value="Socioeconomic">Socioeconomic</option>
+            <option value="Environmental">Environmental</option>
+            <option value="Immunological">Immunological</option>
+            <option value="Genomic">Genomic</option>
+          </select>
+        </div>
+        
+        <button id="reset-btn">Reset View</button>
+        <button id="export-btn">Export JSON</button>
+      </div>
+    </header>
+    
+    <div class="main-content">
+      <div id="graph-container">
+        <svg></svg>
+      </div>
+      
+      <div class="legend">
+        <h3>Node Types</h3>
+        <div id="legend-items"></div>
+      </div>
+      
+      <div class="stats">
+        <h3>Graph Statistics</h3>
+        <div id="stats-content"></div>
+      </div>
+      
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+  </div>
+
+  <script>
+    // Load graph data from Rust export or use example data
+    // Replace this with actual data from: export_graph_to_json()
+    const graphData = {
+      "nodes": [
+        {"numeric_id":0,"label":"QuantumLimitGraph","node_type":"Central","quantum_weight":1.0,"stage":"Stage1Direct","description":"Central SARS-CoV-2 Quantum Knowledge Graph Node"},
+        {"numeric_id":1,"label":"ACE2 Receptor","node_type":"Biological","quantum_weight":0.95,"stage":"Stage1Direct","description":"Host receptor facilitating viral entry via spike protein binding"},
+        {"numeric_id":2,"label":"Spike Protein","node_type":"Biological","quantum_weight":0.93,"stage":"Stage1Direct","description":"Viral surface protein enabling cell entry"},
+        {"numeric_id":3,"label":"Viral Load","node_type":"Biological","quantum_weight":0.88,"stage":"Stage1Direct","description":"Quantity of virus in respiratory tract"},
+        {"numeric_id":4,"label":"Diabetes","node_type":"Comorbidity","quantum_weight":0.82,"stage":"Stage2Indirect","description":"Metabolic disorder increasing COVID-19 severity"},
+        {"numeric_id":5,"label":"Cardiovascular Disease","node_type":"Comorbidity","quantum_weight":0.85,"stage":"Stage2Indirect","description":"Heart conditions worsening COVID-19 outcomes"},
+        {"numeric_id":6,"label":"Respiratory Disease","node_type":"Comorbidity","quantum_weight":0.87,"stage":"Stage2Indirect","description":"COPD, asthma increasing vulnerability"},
+        {"numeric_id":7,"label":"Kidney/Liver Disease","node_type":"Comorbidity","quantum_weight":0.78,"stage":"Stage2Indirect","description":"Organ dysfunction affecting recovery"},
+        {"numeric_id":8,"label":"Influenza Coinfection","node_type":"Coinfection","quantum_weight":0.75,"stage":"Stage2Indirect","description":"Concurrent flu infection worsening outcomes"},
+        {"numeric_id":9,"label":"RSV Coinfection","node_type":"Coinfection","quantum_weight":0.72,"stage":"Stage2Indirect","description":"Respiratory syncytial virus coinfection"},
+        {"numeric_id":10,"label":"Crowded Housing","node_type":"Socioeconomic","quantum_weight":0.80,"stage":"Stage3Systemic","description":"High-density living increasing transmission"},
+        {"numeric_id":11,"label":"Public-Facing Jobs","node_type":"Socioeconomic","quantum_weight":0.83,"stage":"Stage3Systemic","description":"Essential workers with high exposure"},
+        {"numeric_id":12,"label":"Healthcare Access","node_type":"Socioeconomic","quantum_weight":0.86,"stage":"Stage3Systemic","description":"Availability and quality of medical care"},
+        {"numeric_id":13,"label":"Air Quality","node_type":"Environmental","quantum_weight":0.70,"stage":"Stage4Environmental","description":"Pollution levels affecting respiratory health"},
+        {"numeric_id":14,"label":"Ventilation","node_type":"Environmental","quantum_weight":0.77,"stage":"Stage4Environmental","description":"Airflow reducing viral concentration"},
+        {"numeric_id":15,"label":"Temperature/Humidity","node_type":"Environmental","quantum_weight":0.65,"stage":"Stage4Environmental","description":"Climate factors affecting viral survival"},
+        {"numeric_id":16,"label":"Immune Response","node_type":"Immunological","quantum_weight":0.91,"stage":"Stage5Quantum","description":"Quantum-entangled immune system dynamics"},
+        {"numeric_id":17,"label":"Genomic Variants","node_type":"Genomic","quantum_weight":0.89,"stage":"Stage5Quantum","description":"Viral mutations with quantum correlation patterns"}
+      ],
+      "edges": [
+        {"source":0,"target":1,"correlation_strength":0.95,"quantum_entanglement":0.92,"correlation_type":"Causal","stage":"Stage1Direct"},
+        {"source":0,"target":2,"correlation_strength":0.93,"quantum_entanglement":0.90,"correlation_type":"Causal","stage":"Stage1Direct"},
+        {"source":1,"target":2,"correlation_strength":0.98,"quantum_entanglement":0.95,"correlation_type":"Bidirectional","stage":"Stage1Direct"},
+        {"source":2,"target":3,"correlation_strength":0.88,"quantum_entanglement":0.85,"correlation_type":"Causal","stage":"Stage1Direct"},
+        {"source":0,"target":4,"correlation_strength":0.82,"quantum_entanglement":0.78,"correlation_type":"Correlative","stage":"Stage2Indirect"},
+        {"source":0,"target":5,"correlation_strength":0.85,"quantum_entanglement":0.81,"correlation_type":"Correlative","stage":"Stage2Indirect"},
+        {"source":0,"target":6,"correlation_strength":0.87,"quantum_entanglement":0.83,"correlation_type":"Correlative","stage":"Stage2Indirect"},
+        {"source":1,"target":6,"correlation_strength":0.79,"quantum_entanglement":0.75,"correlation_type":"Bidirectional","stage":"Stage2Indirect"},
+        {"source":3,"target":8,"correlation_strength":0.75,"quantum_entanglement":0.70,"correlation_type":"Correlative","stage":"Stage2Indirect"},
+        {"source":3,"target":9,"correlation_strength":0.72,"quantum_entanglement":0.68,"correlation_type":"Correlative","stage":"Stage2Indirect"},
+        {"source":0,"target":10,"correlation_strength":0.80,"quantum_entanglement":0.65,"correlation_type":"Probabilistic","stage":"Stage3Systemic"},
+        {"source":0,"target":11,"correlation_strength":0.83,"quantum_entanglement":0.68,"correlation_type":"Probabilistic","stage":"Stage3Systemic"},
+        {"source":12,"target":5,"correlation_strength":0.74,"quantum_entanglement":0.60,"correlation_type":"Bidirectional","stage":"Stage3Systemic"},
+        {"source":13,"target":6,"correlation_strength":0.76,"quantum_entanglement":0.55,"correlation_type":"Causal","stage":"Stage4Environmental"},
+        {"source":14,"target":3,"correlation_strength":0.77,"quantum_entanglement":0.58,"correlation_type":"Causal","stage":"Stage4Environmental"},
+        {"source":15,"target":2,"correlation_strength":0.65,"quantum_entanglement":0.50,"correlation_type":"Correlative","stage":"Stage4Environmental"},
+        {"source":0,"target":16,"correlation_strength":0.91,"quantum_entanglement":0.95,"correlation_type":"QuantumEntangled","stage":"Stage5Quantum"},
+        {"source":16,"target":3,"correlation_strength":0.89,"quantum_entanglement":0.92,"correlation_type":"QuantumEntangled","stage":"Stage5Quantum"},
+        {"source":17,"target":2,"correlation_strength":0.94,"quantum_entanglement":0.93,"correlation_type":"QuantumEntangled","stage":"Stage5Quantum"},
+        {"source":17,"target":16,"correlation_strength":0.87,"quantum_entanglement":0.88,"correlation_type":"QuantumEntangled","stage":"Stage5Quantum"}
+      ]
+    };
+
+    // Color schemes
+    const nodeColors = {
+      'Central': '#ff6b6b',
+      'Biological': '#4ecdc4',
+      'Comorbidity': '#ffe66d',
+      'Coinfection': '#ff8c42',
+      'Socioeconomic': '#a8dadc',
+      'Environmental': '#95e1d3',
+      'Immunological': '#f38181',
+      'Genomic': '#aa96da'
+    };
+
+    const stageColors = {
+      'Stage1Direct': '#00d2ff',
+      'Stage2Indirect': '#3a86ff',
+      'Stage3Systemic': '#8338ec',
+      'Stage4Environmental': '#fb5607',
+      'Stage5Quantum': '#ff006e'
+    };
+
+    // Setup
+    const svg = d3.select("svg");
+    const width = window.innerWidth;
+    const height = window.innerHeight - 150;
+    
+    svg.attr("width", width).attr("height", height);
+
+    const g = svg.append("g");
+
+    // Zoom behavior
+    const zoom = d3.zoom()
+      .scaleExtent([0.1, 4])
+      .on("zoom", (event) => {
+        g.attr("transform", event.transform);
+      });
+
+    svg.call(zoom);
+
+    // Create legend
+    const legendItems = d3.select("#legend-items");
+    Object.entries(nodeColors).forEach(([type, color]) => {
+      legendItems.append("div")
+        .attr("class", "legend-item")
+        .html(`<div class="legend-color" style="background: ${color}"></div><span>${type}</span>`);
+    });
+
+    // Simulation
+    let simulation = d3.forceSimulation(graphData.nodes)
+      .force("link", d3.forceLink(graphData.edges).id(d => d.numeric_id).distance(d => 150 / d.correlation_strength))
+      .force("charge", d3.forceManyBody().strength(-400))
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("collision", d3.forceCollide().radius(40));
+
+    // Links
+    const link = g.append("g")
+      .selectAll("line")
+      .data(graphData.edges)
+      .enter().append("line")
+      .attr("class", "link")
+      .attr("stroke", d => stageColors[d.stage] || "#999")
+      .attr("stroke-width", d => d.correlation_strength * 4)
+      .attr("stroke-opacity", d => 0.3 + d.quantum_entanglement * 0.5);
+
+    // Nodes
+    const node = g.append("g")
+      .selectAll("g")
+      .data(graphData.nodes)
+      .enter().append("g")
+      .attr("class", "node")
+      .call(d3.drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended));
+
+    node.append("circle")
+      .attr("r", d => 15 + d.quantum_weight * 15)
+      .attr("fill", d => nodeColors[d.node_type] || "#999");
+
+    node.append("text")
+      .attr("dy", d => -(20 + d.quantum_weight * 15))
+      .attr("text-anchor", "middle")
+      .text(d => d.label);
+
+    // Tooltip
+    const tooltip = d3.select("#tooltip");
+
+    node.on("mouseover", function(event, d) {
+      tooltip.html(`
+        <h4>${d.label}</h4>
+        <p>${d.description || 'No description'}</p>
+        <div class="metric">
+          <span class="metric-label">Type:</span>
+          <span class="metric-value">${d.node_type}</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Stage:</span>
+          <span class="metric-value">${d.stage}</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Quantum Weight:</span>
+          <span class="metric-value">${d.quantum_weight.toFixed(2)}</span>
+        </div>
+      `)
+      .style("left", (event.pageX + 15) + "px")
+      .style("top", (event.pageY - 15) + "px")
+      .classed("visible", true);
+    })
+    .on("mouseout", function() {
+      tooltip.classed("visible", false);
+    });
+
+    // Update stats
+    function updateStats() {
+      const avgQuantum = d3.mean(graphData.nodes, d => d.quantum_weight);
+      const avgCorrelation = d3.mean(graphData.edges, d => d.correlation_strength);
+      const avgEntanglement = d3.mean(graphData.edges, d => d.quantum_entanglement);
+
+      d3.select("#stats-content").html(`
+        <div class="stat-item">
+          <span class="stat-label">Total Nodes:</span>
+          <span class="stat-value">${graphData.nodes.length}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Total Edges:</span>
+          <span class="stat-value">${graphData.edges.length}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Avg Quantum Weight:</span>
+          <span class="stat-value">${avgQuantum.toFixed(3)}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Avg Correlation:</span>
+          <span class="stat-value">${avgCorrelation.toFixed(3)}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Avg Entanglement:</span>
+          <span class="stat-value">${avgEntanglement.toFixed(3)}</span>
+        </div>
+      `);
+    }
+
+    updateStats();
+
+    // Simulation tick
+    simulation.on("tick", () => {
+      link
+        .attr("x1", d => d.source.x)
+        .attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x)
+        .attr("y2", d => d.target.y);
+
+      node.attr("transform", d => `translate(${d.x},${d.y})`);
+    });
+
+    // Drag functions
+    function dragstarted(event, d) {
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+      d.fx = event.x;
+      d.fy = event.y;
+    }
+
+    function dragended(event, d) {
+      if (!event.active) simulation.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    }
+
+    // Controls
+    d3.select("#stage-filter").on("change", function() {
+      const stage = this.value;
+      node.style("opacity", d => stage === "all" || d.stage === stage ? 1 : 0.2);
+      link.style("opacity", d => stage === "all" || d.stage === stage ? 0.6 : 0.1);
+    });
+
+    d3.select("#node-type-filter").on("change", function() {
+      const type = this.value;
+      node.style("opacity", d => type === "all" || d.node_type === type ? 1 : 0.2);
+    });
+
+    d3.select("#reset-btn").on("click", function() {
+      svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
+      d3.select("#stage-filter").property("value", "all");
+      d3.select("#node-type-filter").property("value", "all");
+      node.style("opacity", 1);
+      link.style("opacity", 0.6);
+    });
+
+    d3.select("#export-btn").on("click", function() {
+      const dataStr = JSON.stringify(graphData, null, 2);
+      const dataBlob = new Blob([dataStr], {type: 'application/json'});
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'sarscov2_quantum_graph.json';
+      link.click();
+    });
+
+    // Responsive resize
+    window.addEventListener('resize', () => {
+      const newWidth = window.innerWidth;
+      const newHeight = window.innerHeight - 150;
+      svg.attr("width", newWidth).attr("height", newHeight);
+      simulation.force("center", d3.forceCenter(newWidth / 2, newHeight / 2));
+      simulation.alpha(0.3).restart();
+    });
+  </script>
+</body>
+</html>
