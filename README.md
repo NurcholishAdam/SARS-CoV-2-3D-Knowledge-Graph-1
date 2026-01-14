@@ -404,11 +404,11 @@ See [LICENSE](../../LICENSE) for details.
 ## Citation
 
 ```bibtex
-@software{limit_sarscov2_2024,
+@software{limit_sarscov2_2025,
   title={LIMIT-SARSCOV2: Multi-Intent Knowledge Graph for SARS-CoV-2 Research},
   author={Quantum LIMIT Graph Team},
-  year={2024},
-  url={https://github.com/yourusername/quantum-limit-graph}
+  year={2025},
+  url={https://github.com/NurchlishAdam/quantum-limit-graph}
 }
 ```
 
